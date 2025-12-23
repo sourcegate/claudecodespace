@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd talk-to-landing && npm run build",
+  "installCommand": "cd talk-to-landing && npm install",
+  "framework": "nextjs",
+  "outputDirectory": "talk-to-landing/.next"
+}
