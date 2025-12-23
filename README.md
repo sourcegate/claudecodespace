@@ -1,41 +1,59 @@
-# Vibes
+# Talk to Landing
 
-A repository with GitHub Codespaces configuration that includes Claude Code with API key authentication.
+Transform any YouTube video into a premium, commercial-ready landing page.
 
-## Setup
+## Features
 
-1. Fork this repository
-2. Create a Codespace from your fork
-3. Set your `ANTHROPIC_API_KEY` environment variable in GitHub Codespaces secrets:
-   - Go to [GitHub Codespaces Settings](https://github.com/settings/codespaces)
-   - Click "New secret"
-   - Name: `ANTHROPIC_API_KEY`
-   - Value: Your API key from [Anthropic Console](https://console.anthropic.com/keys)
-   - Select your forked repository
+- **YouTube Transcript Extraction** - Automatically fetches video captions
+- **AI Framework Extraction** - Uses Claude to analyze and extract:
+  - Core philosophy and powerful quotes
+  - Signature question that reframes everything
+  - Origin stories and transformation arc
+  - Custom acronym framework
+  - Three-layer positioning reframe
+  - Service tiers, book concept, and workshop modules
+- **Premium Landing Page** - StoryBrand-structured with editorial design
+- **One-Click Download** - Export as standalone HTML
 
-4. Launch your Codespace - you'll see a prompt if the API key isn't set
+## Tech Stack
 
-## Using Claude Code
+- Next.js 14 (App Router)
+- Tailwind CSS
+- Framer Motion
+- Claude API (Anthropic)
 
-Once your Codespace is set up with your API key, simply use Claude Code with:
+## Getting Started
 
-```bash
-claude
-```
-
-Or with a specific question:
-
-```bash
-claude "What does this repository do?"
-```
-
-## Troubleshooting
-
-If you see a warning about missing API key when the Codespace starts:
-
-1. Follow the on-screen instructions to set up your API key
-2. After adding the secret, you may need to rebuild your Codespace for it to take effect
-3. Alternatively, you can set the key for your current session with:
+1. Clone the repository
+2. Install dependencies:
    ```bash
-   export ANTHROPIC_API_KEY=your-api-key-here
+   npm install
    ```
+3. Create a `.env.local` file with your Anthropic API key:
+   ```
+   ANTHROPIC_API_KEY=your_key_here
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+5. Open [http://localhost:3000](http://localhost:3000)
+
+## Usage
+
+1. Paste any YouTube URL with captions enabled
+2. Watch as AI extracts the speaker's framework
+3. Preview your generated landing page
+4. Download as HTML for deployment
+
+## Design System
+
+- **Colors**: Deep navy (#1a1a2e) + warm gold (#c9a227) on cream (#FAFAF8)
+- **Typography**: Source Serif 4 (body) + DM Sans (headings)
+- **Style**: Editorial, premium consulting aesthetic
+
+## Deploy
+
+Deploy to Vercel with one click. Make sure to add `ANTHROPIC_API_KEY` to your environment variables.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sourcegate/claudecodespace)
