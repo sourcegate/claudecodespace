@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Talk to Landing
+
+Transform any YouTube video into a premium, commercial-ready landing page.
+
+## Features
+
+- **YouTube Transcript Extraction** - Automatically fetches video captions
+- **AI Framework Extraction** - Uses Claude to analyze and extract:
+  - Core philosophy and powerful quotes
+  - Signature question that reframes everything
+  - Origin stories and transformation arc
+  - Custom acronym framework
+  - Three-layer positioning reframe
+  - Service tiers, book concept, and workshop modules
+- **Premium Landing Page** - StoryBrand-structured with editorial design
+- **One-Click Download** - Export as standalone HTML
+
+## Tech Stack
+
+- Next.js 14 (App Router)
+- Tailwind CSS
+- Framer Motion
+- Claude API (Anthropic)
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env.local` file with your Anthropic API key:
+   ```
+   ANTHROPIC_API_KEY=your_key_here
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+5. Open [http://localhost:3000](http://localhost:3000)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Usage
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Paste any YouTube URL with captions enabled
+2. Watch as AI extracts the speaker's framework
+3. Preview your generated landing page
+4. Download as HTML for deployment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Design System
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Colors**: Deep navy (#1a1a2e) + warm gold (#c9a227) on cream (#FAFAF8)
+- **Typography**: Source Serif 4 (body) + DM Sans (headings)
+- **Style**: Editorial, premium consulting aesthetic
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+Deploy to Vercel with one click. Make sure to add `ANTHROPIC_API_KEY` to your environment variables.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sourcegate/claudecodespace&root-directory=talk-to-landing)
