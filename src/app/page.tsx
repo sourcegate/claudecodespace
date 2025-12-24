@@ -1,53 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { Play, Sparkles, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 
-// Dynamic import to avoid SSR issues with Clerk
+// Dynamic imports to avoid SSR issues with Clerk
 const AuthNav = dynamic(() => import("@/components/auth-nav").then(mod => mod.AuthNav), {
   ssr: false,
   loading: () => <div className="w-8 h-8 rounded-full bg-[var(--stone)] animate-pulse" />,
 });
 
+const GenerateForm = dynamic(() => import("@/components/generate-form").then(mod => mod.GenerateForm), {
+  ssr: false,
+  loading: () => (
+    <div className="max-w-2xl mx-auto">
+      <div className="h-[74px] rounded-2xl border-2 border-[var(--stone)] bg-white animate-pulse" />
+    </div>
+  ),
+});
+
 export default function Home() {
-  const [url, setUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
-
-  const extractVideoId = (input: string): string | null => {
-    // Handle various YouTube URL formats
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
-      /^([a-zA-Z0-9_-]{11})$/, // Direct video ID
-    ];
-
-    for (const pattern of patterns) {
-      const match = input.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    const videoId = extractVideoId(url.trim());
-    if (!videoId) {
-      setError("Please enter a valid YouTube URL or video ID");
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Navigate to processing page with video ID
-    router.push(`/generate/${videoId}`);
-  };
-
   const features = [
     "Extract your unique framework and IP",
     "Generate a premium landing page",
@@ -108,47 +80,13 @@ export default function Home() {
           </motion.p>
 
           {/* URL Input Form */}
-          <motion.form
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            onSubmit={handleSubmit}
-            className="max-w-2xl mx-auto"
           >
-            <div className="relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <Play className="w-5 h-5 text-[var(--slate)]" />
-              </div>
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Paste YouTube URL or video ID..."
-                className="w-full pl-12 pr-40 py-5 rounded-2xl border-2 border-[var(--stone)] bg-white text-[var(--navy)] placeholder:text-[var(--slate)]/50 focus:outline-none focus:border-[var(--gold)] transition-colors font-sans text-lg"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !url.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 btn-gold px-6 py-3 rounded-xl font-sans font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 spinner" />
-                    Processing
-                  </>
-                ) : (
-                  <>
-                    Generate
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </div>
-            {error && (
-              <p className="mt-3 text-red-500 text-sm font-sans">{error}</p>
-            )}
-          </motion.form>
+            <GenerateForm />
+          </motion.div>
 
           {/* Feature Pills */}
           <motion.div
