@@ -14,11 +14,24 @@ export interface GenerationLog {
 }
 
 export async function logGeneration(data: GenerationLog): Promise<void> {
+  // Always log to Vercel logs as backup (without huge transcript/result)
+  const logSummary = {
+    timestamp: data.timestamp,
+    userEmail: data.userEmail,
+    userId: data.userId,
+    videoId: data.videoId,
+    videoTitle: data.videoTitle,
+    videoChannel: data.videoChannel,
+    transcriptSource: data.transcriptSource,
+    transcriptLength: data.transcript?.length || 0,
+    resultLength: data.result?.length || 0,
+  };
+  console.log("[GENERATION]", JSON.stringify(logSummary));
+
   const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
 
   if (!webhookUrl) {
-    console.log("GOOGLE_SHEETS_WEBHOOK_URL not configured, skipping log");
-    console.log("Generation data:", JSON.stringify(data));
+    console.log("GOOGLE_SHEETS_WEBHOOK_URL not configured, skipping Sheets log");
     return;
   }
 
