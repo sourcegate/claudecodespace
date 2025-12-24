@@ -73,23 +73,28 @@ export async function extractAudio(videoId: string): Promise<AudioExtractionResu
 export async function downloadAudio(audioUrl: string): Promise<Buffer> {
   console.log("Downloading audio from:", audioUrl);
 
-  // Try with full browser-like headers
-  const response = await fetch(audioUrl, {
+  // First attempt: minimal headers (some CDNs block if they detect spoofed origins)
+  let response = await fetch(audioUrl, {
     method: "GET",
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept": "audio/mpeg, audio/*, */*",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Referer": "https://www.youtube.com/",
-      "Origin": "https://www.youtube.com",
+      "Accept": "*/*",
     },
     redirect: "follow",
   });
 
   console.log("Download response status:", response.status);
 
+  // If first attempt fails, try with no custom headers
   if (!response.ok) {
-    // If 404, the link may have expired - log more details
+    console.log("First download attempt failed, trying with minimal headers...");
+    response = await fetch(audioUrl, {
+      redirect: "follow",
+    });
+    console.log("Second attempt status:", response.status);
+  }
+
+  if (!response.ok) {
     console.error("Download failed:", response.status, response.statusText);
     console.error("Response headers:", Object.fromEntries(response.headers.entries()));
     throw new Error(`Failed to download audio: ${response.status} - Link may have expired`);
