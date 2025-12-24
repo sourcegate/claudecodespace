@@ -179,27 +179,27 @@ export default function Home() {
               What You Will Get
             </h2>
             <p className="text-[var(--slate)] text-lg max-w-2xl mx-auto">
-              A complete thought leadership platform extracted from your content.
+              Everything you need to turn your talk into a professional online presence.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-6">
             {[
               {
-                title: "Intellectual Property Extraction",
-                items: ["Core philosophy and beliefs", "Signature question that reframes", "Origin stories mapped", "Transformation arc identified", "Quotable lines captured"],
+                title: "Your Unique Voice",
+                items: ["Key messages that resonate", "Your story, clearly told", "Memorable quotes highlighted", "What makes you different", "Your expertise showcased"],
               },
               {
-                title: "Framework Generation",
-                items: ["Custom acronym methodology", "Three-layer positioning reframe", "Comparable expert positioning", "Service tier structure", "Book concept outline"],
+                title: "Professional Positioning",
+                items: ["Clear value proposition", "Compelling service offerings", "Expert credibility signals", "Audience-focused messaging", "Strategic calls-to-action"],
               },
               {
-                title: "Premium Landing Page",
-                items: ["StoryBrand narrative structure", "Editorial design system", "Embedded video showcase", "Framework breakdown sections", "Call-to-action optimization"],
+                title: "Premium Design",
+                items: ["Beautiful, modern layout", "Your video front and center", "Easy-to-scan sections", "Professional typography", "Cohesive visual identity"],
               },
               {
-                title: "Ready for Deployment",
-                items: ["Clean React/Next.js code", "Mobile responsive design", "Accessible by default", "Performance optimized", "Easy customization"],
+                title: "Ready to Launch",
+                items: ["Download as HTML", "Works on any device", "Fast loading speed", "Easy to customize", "Host anywhere"],
               },
             ].map((category, i) => (
               <motion.div
