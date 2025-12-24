@@ -74,9 +74,8 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl text-[var(--slate)] max-w-2xl mx-auto mb-12"
           >
-            Paste any YouTube URL. We will extract your unique framework,
-            positioning, and intellectual property, then generate a premium
-            landing page ready for deployment.
+            Paste any YouTube URL and watch your ideas transform into a
+            polished landing page in minutes.
           </motion.p>
 
           {/* URL Input Form */}
