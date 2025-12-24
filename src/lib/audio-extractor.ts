@@ -1,7 +1,5 @@
-// Using cobalt.tools API for audio extraction
-// API docs: https://github.com/imputnet/cobalt/blob/main/docs/api.md
-
-const COBALT_API_URL = "https://api.cobalt.tools/";
+// Using RapidAPI YouTube MP3 API for audio extraction
+// Sign up at: https://rapidapi.com/
 
 export interface AudioExtractionResult {
   audioUrl: string;
@@ -9,62 +7,47 @@ export interface AudioExtractionResult {
 }
 
 export async function extractAudio(videoId: string): Promise<AudioExtractionResult> {
+  const rapidApiKey = process.env.RAPIDAPI_KEY;
+
+  if (!rapidApiKey) {
+    throw new Error("RAPIDAPI_KEY environment variable is not configured");
+  }
+
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-  const response = await fetch(COBALT_API_URL, {
-    method: "POST",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      url: youtubeUrl,
-      downloadMode: "audio",
-      audioFormat: "mp3",
-    }),
-  });
+  // Try the YouTube MP3 Download API
+  const response = await fetch(
+    `https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`,
+    {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": rapidApiKey,
+        "x-rapidapi-host": "youtube-mp36.p.rapidapi.com",
+      },
+    }
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error("Cobalt API error response:", errorText);
-    throw new Error(`Cobalt API error: ${response.status} ${response.statusText}`);
+    console.error("RapidAPI error response:", errorText);
+    throw new Error(`RapidAPI error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
-  console.log("Cobalt API response:", JSON.stringify(data));
+  console.log("RapidAPI response:", JSON.stringify(data));
 
-  if (data.status === "error") {
-    throw new Error(`Cobalt extraction failed: ${data.error?.code || data.text || "Unknown error"}`);
+  if (data.status === "fail" || data.error) {
+    throw new Error(`RapidAPI extraction failed: ${data.msg || data.error || "Unknown error"}`);
   }
 
-  // Handle tunnel response (Cobalt proxies the file)
-  if (data.status === "tunnel" || data.status === "redirect") {
+  if (data.link) {
     return {
-      audioUrl: data.url,
-      filename: data.filename || `${videoId}.mp3`,
+      audioUrl: data.link,
+      filename: data.title ? `${data.title}.mp3` : `${videoId}.mp3`,
     };
   }
 
-  // Handle stream response
-  if (data.status === "stream") {
-    return {
-      audioUrl: data.url,
-      filename: data.filename || `${videoId}.mp3`,
-    };
-  }
-
-  // Handle picker response (multiple options)
-  if (data.status === "picker" && data.picker?.length > 0) {
-    const audioOption = data.picker.find((p: { type?: string }) => p.type === "audio") || data.picker[0];
-    if (audioOption?.url) {
-      return {
-        audioUrl: audioOption.url,
-        filename: audioOption.filename || `${videoId}.mp3`,
-      };
-    }
-  }
-
-  throw new Error(`Unexpected Cobalt response status: ${data.status}`);
+  throw new Error(`Unexpected RapidAPI response: ${JSON.stringify(data)}`);
 }
 
 export async function downloadAudio(audioUrl: string): Promise<Buffer> {
