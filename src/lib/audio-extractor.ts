@@ -1,4 +1,7 @@
-const COBALT_API_URL = "https://api.cobalt.tools/api/json";
+// Using cobalt.tools API for audio extraction
+// API docs: https://github.com/imputnet/cobalt/blob/main/docs/api.md
+
+const COBALT_API_URL = "https://api.cobalt.tools/";
 
 export interface AudioExtractionResult {
   audioUrl: string;
@@ -16,36 +19,43 @@ export async function extractAudio(videoId: string): Promise<AudioExtractionResu
     },
     body: JSON.stringify({
       url: youtubeUrl,
-      vCodec: "h264",
-      vQuality: "720",
-      aFormat: "mp3",
-      isAudioOnly: true,
-      isNoTTWatermark: true,
-      isTTFullAudio: false,
-      disableMetadata: false,
+      downloadMode: "audio",
+      audioFormat: "mp3",
     }),
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Cobalt API error response:", errorText);
     throw new Error(`Cobalt API error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
+  console.log("Cobalt API response:", JSON.stringify(data));
 
   if (data.status === "error") {
-    throw new Error(`Cobalt extraction failed: ${data.text || "Unknown error"}`);
+    throw new Error(`Cobalt extraction failed: ${data.error?.code || data.text || "Unknown error"}`);
   }
 
-  if (data.status === "redirect" || data.status === "stream") {
+  // Handle tunnel response (Cobalt proxies the file)
+  if (data.status === "tunnel" || data.status === "redirect") {
     return {
       audioUrl: data.url,
       filename: data.filename || `${videoId}.mp3`,
     };
   }
 
-  if (data.status === "picker") {
-    // Multiple options available, pick the first audio one
-    const audioOption = data.picker?.find((p: { type: string }) => p.type === "audio") || data.picker?.[0];
+  // Handle stream response
+  if (data.status === "stream") {
+    return {
+      audioUrl: data.url,
+      filename: data.filename || `${videoId}.mp3`,
+    };
+  }
+
+  // Handle picker response (multiple options)
+  if (data.status === "picker" && data.picker?.length > 0) {
+    const audioOption = data.picker.find((p: { type?: string }) => p.type === "audio") || data.picker[0];
     if (audioOption?.url) {
       return {
         audioUrl: audioOption.url,
@@ -54,11 +64,15 @@ export async function extractAudio(videoId: string): Promise<AudioExtractionResu
     }
   }
 
-  throw new Error(`Unexpected Cobalt response: ${JSON.stringify(data)}`);
+  throw new Error(`Unexpected Cobalt response status: ${data.status}`);
 }
 
 export async function downloadAudio(audioUrl: string): Promise<Buffer> {
-  const response = await fetch(audioUrl);
+  const response = await fetch(audioUrl, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    },
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to download audio: ${response.status}`);
