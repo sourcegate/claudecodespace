@@ -141,7 +141,7 @@ export default function Home() {
               {
                 step: "03",
                 title: "Get Your Platform",
-                description: "Receive a premium, StoryBrand-structured landing page with your framework beautifully presented.",
+                description: "Receive a well-crafted landing page with your message beautifully presented.",
               },
             ].map((item, i) => (
               <motion.div

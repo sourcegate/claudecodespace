@@ -13,7 +13,7 @@ Transform any YouTube video into a premium, commercial-ready landing page.
   - Custom acronym framework
   - Three-layer positioning reframe
   - Service tiers, book concept, and workshop modules
-- **Premium Landing Page** - StoryBrand-structured with editorial design
+- **Premium Landing Page** - Well-crafted with editorial design
 - **One-Click Download** - Export as standalone HTML
 - **User Authentication** - Clerk-powered Google OAuth
 - **Usage Limits** - 3 free generations per user
@@ -74,7 +74,7 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 1. **Caption Check** - First tries to fetch existing YouTube captions
 2. **Manual Fallback** - If no captions, prompts user to paste transcript manually
 3. **AI Analysis** - Claude analyzes transcript and extracts frameworks
-4. **Page Generation** - Generates a premium StoryBrand-structured landing page
+4. **Page Generation** - Generates a well-crafted landing page
 
 ## Design System
 
