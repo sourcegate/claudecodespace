@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { Play, ArrowRight, Loader2 } from "lucide-react";
 
 export function GenerateForm() {
@@ -13,6 +13,7 @@ export function GenerateForm() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const { openSignIn } = useClerk();
+  const { user } = useUser();
 
   // Navigate to generate page after signing in
   useEffect(() => {
@@ -54,6 +55,22 @@ export function GenerateForm() {
     }
 
     setIsLoading(true);
+
+    // Check if user has generations remaining
+    try {
+      const usageRes = await fetch("/api/usage");
+      if (usageRes.ok) {
+        const usage = await usageRes.json();
+        if (!usage.allowed) {
+          setError("You've used all your free generations. Contact us to upgrade.");
+          setIsLoading(false);
+          return;
+        }
+      }
+    } catch {
+      // If usage check fails, let them try anyway
+    }
+
     router.push(`/generate/${videoId}`);
   };
 
