@@ -26,7 +26,7 @@ Transform any YouTube video into a premium, commercial-ready landing page.
 - Claude API (Anthropic)
 - OpenAI Whisper API
 - Clerk Authentication
-- RapidAPI (YouTube audio extraction)
+- @distube/ytdl-core (YouTube audio extraction)
 
 ## Environment Variables
 
@@ -42,7 +42,6 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 
 # Optional - For transcribing videos without captions
 OPENAI_API_KEY=your_openai_key
-RAPIDAPI_KEY=your_rapidapi_key
 ```
 
 ### Getting API Keys
@@ -51,8 +50,7 @@ RAPIDAPI_KEY=your_rapidapi_key
 |---------|-----|---------|
 | Anthropic | https://console.anthropic.com/ | Claude AI for framework extraction |
 | Clerk | https://dashboard.clerk.com/ | User authentication |
-| OpenAI | https://platform.openai.com/ | Whisper transcription |
-| RapidAPI | https://rapidapi.com/ytjar/api/youtube-mp36 | YouTube audio extraction |
+| OpenAI | https://platform.openai.com/ | Whisper transcription (optional) |
 
 ## Getting Started
 

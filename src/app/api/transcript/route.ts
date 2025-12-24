@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript";
-import { extractAudio, downloadAudio } from "@/lib/audio-extractor";
+import { extractAudio } from "@/lib/audio-extractor";
 import { transcribeAudio, isFileSizeValid } from "@/lib/whisper";
 
 async function getVideoInfo(videoId: string) {
@@ -68,13 +68,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Extract audio from YouTube
+    // Extract audio from YouTube (uses @distube/ytdl-core)
     console.log("Extracting audio from YouTube...");
     const audioResult = await extractAudio(videoId);
-
-    // Download the audio file
-    console.log("Downloading audio...");
-    const audioBuffer = await downloadAudio(audioResult.audioUrl);
+    const audioBuffer = audioResult.audioBuffer;
 
     // Check file size (OpenAI limit is 25MB)
     if (!isFileSizeValid(audioBuffer)) {
@@ -109,15 +106,23 @@ export async function GET(request: NextRequest) {
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
-    if (errorMessage.includes("Cobalt")) {
+    // Check for common ytdl-core errors
+    if (errorMessage.includes("Sign in") || errorMessage.includes("age-restricted")) {
       return NextResponse.json(
-        { error: "Unable to extract audio from this video. It may be restricted." },
-        { status: 502 }
+        { error: "This video is age-restricted or requires sign-in. Please try another video." },
+        { status: 403 }
+      );
+    }
+
+    if (errorMessage.includes("private") || errorMessage.includes("unavailable")) {
+      return NextResponse.json(
+        { error: "This video is private or unavailable." },
+        { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { error: "Failed to transcribe video. Please try another video." },
+      { error: `Failed to transcribe video: ${errorMessage}` },
       { status: 500 }
     );
   }

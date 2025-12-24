@@ -1,106 +1,63 @@
-// Using RapidAPI YouTube MP3 API for audio extraction
-// Sign up at: https://rapidapi.com/
+// Using @distube/ytdl-core for direct YouTube audio extraction
+// No external API dependencies - extracts directly from YouTube
+
+import ytdl from "@distube/ytdl-core";
 
 export interface AudioExtractionResult {
-  audioUrl: string;
+  audioBuffer: Buffer;
   filename: string;
 }
 
-async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export async function extractAudio(videoId: string): Promise<AudioExtractionResult> {
-  const rapidApiKey = process.env.RAPIDAPI_KEY;
+  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-  if (!rapidApiKey) {
-    throw new Error("RAPIDAPI_KEY environment variable is not configured");
+  console.log("Fetching video info for:", videoId);
+
+  // Get video info to find audio formats
+  const info = await ytdl.getInfo(videoUrl);
+  const title = info.videoDetails.title || videoId;
+
+  console.log("Video title:", title);
+
+  // Filter to audio-only formats and sort by quality
+  const audioFormats = ytdl.filterFormats(info.formats, "audioonly");
+
+  if (audioFormats.length === 0) {
+    throw new Error("No audio formats available for this video");
   }
 
-  const maxAttempts = 30; // Max 30 attempts (about 60 seconds)
-  let attempts = 0;
+  // Choose the best audio format (prefer m4a/mp4a for Whisper compatibility)
+  const format = audioFormats.find(f => f.mimeType?.includes("mp4")) || audioFormats[0];
 
-  while (attempts < maxAttempts) {
-    attempts++;
-    console.log(`RapidAPI attempt ${attempts}/${maxAttempts}`);
+  console.log("Selected format:", format.mimeType, "bitrate:", format.audioBitrate);
 
-    const response = await fetch(
-      `https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`,
-      {
-        method: "GET",
-        headers: {
-          "x-rapidapi-key": rapidApiKey,
-          "x-rapidapi-host": "youtube-mp36.p.rapidapi.com",
-        },
-      }
-    );
+  // Download audio as buffer
+  const chunks: Buffer[] = [];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("RapidAPI error response:", errorText);
-      throw new Error(`RapidAPI error: ${response.status} ${response.statusText}`);
-    }
+  return new Promise((resolve, reject) => {
+    const stream = ytdl.downloadFromInfo(info, { format });
 
-    const data = await response.json();
-    console.log("RapidAPI response:", JSON.stringify(data));
-
-    if (data.status === "fail" || data.error) {
-      throw new Error(`RapidAPI extraction failed: ${data.msg || data.error || "Unknown error"}`);
-    }
-
-    // If still processing, wait and retry
-    if (data.status === "processing") {
-      console.log(`Still processing (${data.progress || 0}%), waiting 2 seconds...`);
-      await sleep(2000);
-      continue;
-    }
-
-    // Success - got the link
-    if (data.status === "ok" && data.link) {
-      return {
-        audioUrl: data.link,
-        filename: data.title ? `${data.title}.mp3` : `${videoId}.mp3`,
-      };
-    }
-
-    // Unknown status
-    throw new Error(`Unexpected RapidAPI response: ${JSON.stringify(data)}`);
-  }
-
-  throw new Error("RapidAPI processing timeout - please try again");
-}
-
-export async function downloadAudio(audioUrl: string): Promise<Buffer> {
-  console.log("Downloading audio from:", audioUrl);
-
-  // First attempt: minimal headers (some CDNs block if they detect spoofed origins)
-  let response = await fetch(audioUrl, {
-    method: "GET",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept": "*/*",
-    },
-    redirect: "follow",
-  });
-
-  console.log("Download response status:", response.status);
-
-  // If first attempt fails, try with no custom headers
-  if (!response.ok) {
-    console.log("First download attempt failed, trying with minimal headers...");
-    response = await fetch(audioUrl, {
-      redirect: "follow",
+    stream.on("data", (chunk: Buffer) => {
+      chunks.push(chunk);
     });
-    console.log("Second attempt status:", response.status);
-  }
 
-  if (!response.ok) {
-    console.error("Download failed:", response.status, response.statusText);
-    console.error("Response headers:", Object.fromEntries(response.headers.entries()));
-    throw new Error(`Failed to download audio: ${response.status} - Link may have expired`);
-  }
+    stream.on("end", () => {
+      const audioBuffer = Buffer.concat(chunks);
+      console.log("Downloaded audio size:", audioBuffer.length, "bytes");
 
-  const arrayBuffer = await response.arrayBuffer();
-  console.log("Downloaded audio size:", arrayBuffer.byteLength, "bytes");
-  return Buffer.from(arrayBuffer);
+      // Use .m4a extension for mp4 audio, otherwise use format container
+      const ext = format.container || "m4a";
+      const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}.${ext}`;
+
+      resolve({
+        audioBuffer,
+        filename,
+      });
+    });
+
+    stream.on("error", (error: Error) => {
+      console.error("Stream error:", error);
+      reject(new Error(`Failed to download audio: ${error.message}`));
+    });
+  });
 }
