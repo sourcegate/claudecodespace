@@ -1,63 +1,72 @@
-// Using @distube/ytdl-core for direct YouTube audio extraction
-// No external API dependencies - extracts directly from YouTube
+// Using @ybd-project/ytdl-core for YouTube audio extraction
+// Optimized for serverless with automatic poToken generation
 
-import ytdl from "@distube/ytdl-core";
+import { YtdlCore } from "@ybd-project/ytdl-core/serverless";
 
 export interface AudioExtractionResult {
   audioBuffer: Buffer;
   filename: string;
 }
 
+async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
+
+  // Calculate total length
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return Buffer.from(result);
+}
+
 export async function extractAudio(videoId: string): Promise<AudioExtractionResult> {
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
+  console.log("Initializing ytdl-core for serverless...");
+
+  // Create ytdl instance - auto-generates poToken to avoid bot detection
+  const ytdl = new YtdlCore({
+    // poToken and visitorData are auto-generated if not specified
+  });
+
   console.log("Fetching video info for:", videoId);
 
-  // Get video info to find audio formats
-  const info = await ytdl.getInfo(videoUrl);
+  // Get video info
+  const info = await ytdl.getBasicInfo(videoUrl);
   const title = info.videoDetails.title || videoId;
 
   console.log("Video title:", title);
+  console.log("Available formats:", info.formats.length);
 
-  // Filter to audio-only formats and sort by quality
-  const audioFormats = ytdl.filterFormats(info.formats, "audioonly");
-
-  if (audioFormats.length === 0) {
-    throw new Error("No audio formats available for this video");
-  }
-
-  // Choose the best audio format (prefer m4a/mp4a for Whisper compatibility)
-  const format = audioFormats.find(f => f.mimeType?.includes("mp4")) || audioFormats[0];
-
-  console.log("Selected format:", format.mimeType, "bitrate:", format.audioBitrate);
-
-  // Download audio as buffer
-  const chunks: Buffer[] = [];
-
-  return new Promise((resolve, reject) => {
-    const stream = ytdl.downloadFromInfo(info, { format });
-
-    stream.on("data", (chunk: Buffer) => {
-      chunks.push(chunk);
-    });
-
-    stream.on("end", () => {
-      const audioBuffer = Buffer.concat(chunks);
-      console.log("Downloaded audio size:", audioBuffer.length, "bytes");
-
-      // Use .m4a extension for mp4 audio, otherwise use format container
-      const ext = format.container || "m4a";
-      const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}.${ext}`;
-
-      resolve({
-        audioBuffer,
-        filename,
-      });
-    });
-
-    stream.on("error", (error: Error) => {
-      console.error("Stream error:", error);
-      reject(new Error(`Failed to download audio: ${error.message}`));
-    });
+  // Download as stream and convert to buffer
+  console.log("Downloading audio...");
+  const stream = await ytdl.download(videoUrl, {
+    filter: "audioonly",
+    quality: "highestaudio",
   });
+
+  const buffer = await streamToBuffer(stream);
+  console.log("Downloaded audio size:", buffer.length, "bytes");
+
+  // Determine file extension
+  const ext = "m4a";
+  const safeTitle = title.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 100);
+  const filename = `${safeTitle}.${ext}`;
+
+  return {
+    audioBuffer: buffer,
+    filename,
+  };
 }
