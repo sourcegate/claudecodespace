@@ -46,6 +46,7 @@ export default function GeneratePage() {
     progress: 0,
   });
   const [error, setError] = useState<string | null>(null);
+  const [usageExceeded, setUsageExceeded] = useState(false);
   const [needsManualTranscript, setNeedsManualTranscript] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,6 +79,9 @@ export default function GeneratePage() {
 
       if (!generateRes.ok) {
         const errorData = await generateRes.json();
+        if (errorData.usageExceeded) {
+          setUsageExceeded(true);
+        }
         throw new Error(errorData.error || "Failed to generate content");
       }
 
@@ -369,18 +373,34 @@ export default function GeneratePage() {
           {/* Error State */}
           {error ? (
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-red-500" />
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${usageExceeded ? 'bg-[var(--gold)]/10' : 'bg-red-100'}`}>
+                <AlertCircle className={`w-8 h-8 ${usageExceeded ? 'text-[var(--gold)]' : 'text-red-500'}`} />
               </div>
               <h3 className="text-xl font-sans font-semibold text-[var(--navy)] mb-2">
-                Something went wrong
+                {usageExceeded ? "You've used your free generations" : "Something went wrong"}
               </h3>
-              <p className="text-[var(--slate)] mb-6">{error}</p>
+              <p className="text-[var(--slate)] mb-6">
+                {usageExceeded ? (
+                  <>
+                    Want unlimited access?{" "}
+                    <a
+                      href="https://www.theresonance.studio/contact"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--gold)] hover:underline font-semibold"
+                    >
+                      Contact us to upgrade
+                    </a>
+                  </>
+                ) : (
+                  error
+                )}
+              </p>
               <button
                 onClick={() => router.push("/")}
                 className="btn-primary px-6 py-3 rounded-xl font-sans font-semibold"
               >
-                Try Another Video
+                {usageExceeded ? "Back to Home" : "Try Another Video"}
               </button>
             </div>
           ) : (
