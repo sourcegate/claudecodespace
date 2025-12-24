@@ -6,18 +6,10 @@ Track all generations in a Google Sheet - no database required!
 
 ### Step 1: Create a Google Sheet
 
-1. Go to [Google Sheets](https://sheets.google.com) and create a new spreadsheet
-2. Name it something like "Talk to Landing - Generations"
-3. Add these headers in Row 1:
-   - A1: `Timestamp`
-   - B1: `Email`
-   - C1: `User ID`
-   - D1: `Video ID`
-   - E1: `Video Title`
-   - F1: `Channel`
-   - G1: `Source`
-   - H1: `Transcript`
-   - I1: `Result`
+1. Go to [Google Sheets](https://sheets.google.com)
+2. Click **File → Import → Upload** and upload `generations-template.csv` from this repo
+3. Or create a new sheet and import the CSV
+4. Rename it to "Talk to Landing - Generations"
 
 ### Step 2: Add the Apps Script
 
