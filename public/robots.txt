@@ -1,0 +1,16 @@
+# Robots.txt for Talk to Landing
+# https://talktolanding.theresonance.studio
+
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /faq
+Allow: /how-it-works
+
+# Block dynamic generation pages (user-specific content)
+Disallow: /generate/
+Disallow: /preview/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://talktolanding.theresonance.studio/sitemap.xml

@@ -2,7 +2,14 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import {
+  OrganizationSchema,
+  WebApplicationSchema,
+  HowToSchema,
+  FAQSchema,
+} from "@/components/structured-data";
 
 // Dynamic imports to avoid SSR issues with Clerk
 const AuthNav = dynamic(() => import("@/components/auth-nav").then(mod => mod.AuthNav), {
@@ -19,7 +26,37 @@ const GenerateForm = dynamic(() => import("@/components/generate-form").then(mod
   ),
 });
 
+const homepageFaqs = [
+  {
+    question: "What is Talk to Landing?",
+    answer:
+      "Talk to Landing is an AI-powered tool that transforms YouTube videos, podcasts, and meeting transcripts into professional, conversion-ready landing pages in minutes.",
+  },
+  {
+    question: "How does Talk to Landing work?",
+    answer:
+      "Simply paste a YouTube URL or your transcript, and our AI analyzes your content to extract your unique framework and key messages. Within minutes, you get a professionally designed landing page.",
+  },
+  {
+    question: "What types of content can I use?",
+    answer:
+      "You can use YouTube videos, podcast transcripts, meeting recordings, webinar transcripts, or any text-based transcript of spoken content.",
+  },
+  {
+    question: "How many landing pages can I create for free?",
+    answer:
+      "The free tier includes 3 landing page generations. Contact us for unlimited access.",
+  },
+  {
+    question: "Do I need technical skills?",
+    answer:
+      "No technical skills required. Just paste your content and export the finished landing page as HTML to deploy anywhere.",
+  },
+];
+
 export default function Home() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   const features = [
     "Works with any content",
     "Premium landing page in minutes",
@@ -227,6 +264,58 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="py-20 px-6 bg-[var(--stone)]">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-sans font-bold text-[var(--navy)] mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-[var(--slate)] text-lg">
+              Everything you need to know about Talk to Landing
+            </p>
+          </motion.div>
+
+          <div className="space-y-4">
+            {homepageFaqs.map((faq, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+                className="bg-white rounded-xl overflow-hidden shadow-sm"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left"
+                >
+                  <span className="font-semibold text-[var(--navy)]">
+                    {faq.question}
+                  </span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-[var(--slate)] transition-transform ${
+                      openFaq === i ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === i && (
+                  <div className="px-6 pb-5 text-[var(--slate)]">
+                    {faq.answer}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6 bg-[var(--navy)]">
         <div className="max-w-3xl mx-auto text-center">
@@ -253,6 +342,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Structured Data for SEO */}
+      <OrganizationSchema />
+      <WebApplicationSchema />
+      <HowToSchema />
+      <FAQSchema faqs={homepageFaqs} />
     </main>
   );
 }
