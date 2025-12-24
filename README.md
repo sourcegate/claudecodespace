@@ -53,6 +53,94 @@ GOOGLE_SHEETS_WEBHOOK_URL=your_google_apps_script_url
 
 For Google Sheets tracking, see [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md).
 
+## Setting Up Clerk for Production
+
+### Step 1: Create Production Instance
+
+1. Go to [Clerk Dashboard](https://dashboard.clerk.com)
+2. Click your app name dropdown (top-left corner)
+3. Click **"Create production instance"**
+4. Name it (e.g., "Talk to Landing Production")
+
+### Step 2: Set Up Custom Domain in Clerk
+
+1. In your **Production** instance, go to **Domains** in the left sidebar
+2. Click **"Add domain"**
+3. Enter your subdomain: `talktolanding.yourdomain.com`
+4. Clerk will show you DNS records to add - add them to your DNS provider
+5. Wait for verification (can take a few minutes)
+
+### Step 3: Set Up Google OAuth Credentials
+
+You need your own Google OAuth credentials for production. Here's how:
+
+#### 3a. Create a Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Click the project dropdown (top-left, next to "Google Cloud")
+3. Click **"New Project"**
+4. Name it (e.g., "Talk to Landing") and click **Create**
+5. Make sure your new project is selected
+
+#### 3b. Configure OAuth Consent Screen
+
+1. In the left sidebar, go to **APIs & Services** → **OAuth consent screen**
+2. Select **External** and click **Create**
+3. Fill in the required fields:
+   - **App name**: Talk to Landing
+   - **User support email**: your email
+   - **Developer contact email**: your email
+4. Click **Save and Continue**
+5. On Scopes page, click **Add or Remove Scopes**
+6. Add these scopes:
+   - `openid`
+   - `email`
+   - `profile`
+7. Click **Update**, then **Save and Continue**
+8. On Test Users page, click **Save and Continue**
+9. Review and click **Back to Dashboard**
+
+#### 3c. Create OAuth 2.0 Credentials
+
+1. In the left sidebar, go to **APIs & Services** → **Credentials**
+2. Click **"+ Create Credentials"** → **"OAuth client ID"**
+3. Select **Web application**
+4. Name it (e.g., "Talk to Landing Web")
+5. Under **Authorized redirect URIs**, click **"+ Add URI"**
+6. Add: `https://clerk.yourdomain.com/v1/oauth_callback`
+   - Replace `yourdomain.com` with your actual domain
+   - Example: `https://clerk.talktolanding.theresonance.studio/v1/oauth_callback`
+7. Click **Create**
+8. Copy the **Client ID** and **Client Secret** (save these!)
+
+#### 3d. Add Credentials to Clerk
+
+1. In Clerk Dashboard (Production instance), go to **User & Authentication** → **Social Connections**
+2. Click on **Google**
+3. Toggle **"Use custom credentials"** ON
+4. Paste your **Client ID** and **Client Secret**
+5. Click **Save**
+
+### Step 4: Update Vercel Environment Variables
+
+1. Go to your [Vercel Dashboard](https://vercel.com/dashboard)
+2. Select your project → **Settings** → **Environment Variables**
+3. Update these with your **Production** Clerk keys:
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` → starts with `pk_live_`
+   - `CLERK_SECRET_KEY` → starts with `sk_live_`
+4. Redeploy your app
+
+### Step 5: Publish Google OAuth App (Optional)
+
+While in "Testing" mode, only you can sign in. To allow anyone:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Go to **APIs & Services** → **OAuth consent screen**
+3. Click **"Publish App"**
+4. Confirm the warning
+
+> **Note**: For simple apps, you don't need Google verification. Just publish and it works.
+
 ## Getting Started
 
 1. Clone the repository
