@@ -9,6 +9,8 @@ export interface GenerationLog {
   videoTitle: string;
   videoChannel: string;
   transcriptSource: "youtube-captions" | "manual";
+  transcript: string;
+  result: string;
 }
 
 export async function logGeneration(data: GenerationLog): Promise<void> {

@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
       videoTitle: title || "Unknown",
       videoChannel: channelTitle || "Unknown",
       transcriptSource: transcriptSource || "youtube-captions",
+      transcript: transcript.substring(0, 50000), // Truncate for Sheets cell limit
+      result: JSON.stringify(extractedContent).substring(0, 50000),
     }).catch(console.error);
 
     return NextResponse.json({

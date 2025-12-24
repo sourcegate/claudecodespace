@@ -16,6 +16,8 @@ Track all generations in a Google Sheet - no database required!
    - E1: `Video Title`
    - F1: `Channel`
    - G1: `Source`
+   - H1: `Transcript`
+   - I1: `Result`
 
 ### Step 2: Add the Apps Script
 
@@ -36,7 +38,9 @@ function doPost(e) {
       data.videoId,
       data.videoTitle,
       data.videoChannel,
-      data.transcriptSource
+      data.transcriptSource,
+      data.transcript,
+      data.result
     ]);
 
     return ContentService
@@ -85,6 +89,8 @@ Each generation creates a row with:
 - **Video Title** - Title of the video
 - **Channel** - YouTube channel name
 - **Source** - "youtube-captions" or "manual"
+- **Transcript** - The full transcript input (truncated to 50k chars)
+- **Result** - The generated content as JSON (truncated to 50k chars)
 
 ## Testing
 
