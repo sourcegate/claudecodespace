@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildExtractionPrompt } from "@/lib/prompt";
 import { ExtractedContent } from "@/lib/types";
 import { canGenerate, incrementUsage, getLimit } from "@/lib/usage";
+import { logGeneration } from "@/lib/sheets-logger";
 
 const anthropic = new Anthropic();
 
@@ -31,13 +32,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { videoId, title, channelTitle, transcript } = body;
+    const { videoId, title, channelTitle, transcript, transcriptSource } = body;
 
     if (!videoId || !transcript) {
       return NextResponse.json(
         { error: "Video ID and transcript are required" },
         { status: 400 }
       );
+    }
+
+    // Get user email for logging
+    let userEmail = "unknown";
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+      userEmail = user.emailAddresses[0]?.emailAddress || "unknown";
+    } catch {
+      console.log("Could not fetch user email");
     }
 
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -86,6 +97,17 @@ export async function POST(request: NextRequest) {
 
     // Increment usage count after successful generation
     await incrementUsage(userId);
+
+    // Log generation to Google Sheets (non-blocking)
+    logGeneration({
+      timestamp: new Date().toISOString(),
+      userEmail,
+      userId,
+      videoId,
+      videoTitle: title || "Unknown",
+      videoChannel: channelTitle || "Unknown",
+      transcriptSource: transcriptSource || "youtube-captions",
+    }).catch(console.error);
 
     return NextResponse.json({
       success: true,

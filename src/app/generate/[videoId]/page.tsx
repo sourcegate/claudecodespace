@@ -55,7 +55,7 @@ export default function GeneratePage() {
     thumbnail: string;
   } | null>(null);
 
-  const continueWithTranscript = useCallback(async (transcript: string, title: string, channelTitle: string) => {
+  const continueWithTranscript = useCallback(async (transcript: string, title: string, channelTitle: string, source: "youtube-captions" | "manual" = "youtube-captions") => {
     try {
       // Step 2: Extract content with AI
       setStatus({
@@ -72,6 +72,7 @@ export default function GeneratePage() {
           title,
           channelTitle,
           transcript,
+          transcriptSource: source,
         }),
       });
 
@@ -126,7 +127,7 @@ export default function GeneratePage() {
     const title = videoInfo?.title || "Video Transcript";
     const channelTitle = videoInfo?.channelTitle || "Speaker";
 
-    await continueWithTranscript(manualTranscript.trim(), title, channelTitle);
+    await continueWithTranscript(manualTranscript.trim(), title, channelTitle, "manual");
     setIsSubmitting(false);
   };
 

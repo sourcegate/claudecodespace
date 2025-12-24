@@ -17,6 +17,7 @@ Transform any YouTube video into a premium, commercial-ready landing page.
 - **One-Click Download** - Export as standalone HTML
 - **User Authentication** - Clerk-powered Google OAuth
 - **Usage Limits** - 3 free generations per user
+- **Lead Tracking** - Log all generations to Google Sheets (optional)
 
 ## Tech Stack
 
@@ -38,6 +39,9 @@ ANTHROPIC_API_KEY=your_anthropic_key
 # Required - Clerk authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
+
+# Optional - Track generations in Google Sheets
+GOOGLE_SHEETS_WEBHOOK_URL=your_google_apps_script_url
 ```
 
 ### Getting API Keys
@@ -46,6 +50,8 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 |---------|-----|---------|
 | Anthropic | https://console.anthropic.com/ | Claude AI for framework extraction |
 | Clerk | https://dashboard.clerk.com/ | User authentication |
+
+For Google Sheets tracking, see [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md).
 
 ## Getting Started
 
