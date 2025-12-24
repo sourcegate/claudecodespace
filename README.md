@@ -5,7 +5,7 @@ Transform any YouTube video into a premium, commercial-ready landing page.
 ## Features
 
 - **YouTube Transcript Extraction** - Automatically fetches video captions
-- **Whisper Transcription** - For videos without captions, uses OpenAI Whisper to transcribe audio
+- **Manual Transcript Input** - For videos without captions, paste your own transcript
 - **AI Framework Extraction** - Uses Claude to analyze and extract:
   - Core philosophy and powerful quotes
   - Signature question that reframes everything
@@ -24,9 +24,8 @@ Transform any YouTube video into a premium, commercial-ready landing page.
 - Tailwind CSS
 - Framer Motion
 - Claude API (Anthropic)
-- OpenAI Whisper API
 - Clerk Authentication
-- @distube/ytdl-core (YouTube audio extraction)
+- YouTube Transcript API
 
 ## Environment Variables
 
@@ -39,9 +38,6 @@ ANTHROPIC_API_KEY=your_anthropic_key
 # Required - Clerk authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
-
-# Optional - For transcribing videos without captions
-OPENAI_API_KEY=your_openai_key
 ```
 
 ### Getting API Keys
@@ -50,7 +46,6 @@ OPENAI_API_KEY=your_openai_key
 |---------|-----|---------|
 | Anthropic | https://console.anthropic.com/ | Claude AI for framework extraction |
 | Clerk | https://dashboard.clerk.com/ | User authentication |
-| OpenAI | https://platform.openai.com/ | Whisper transcription (optional) |
 
 ## Getting Started
 
@@ -77,10 +72,9 @@ OPENAI_API_KEY=your_openai_key
 ## How It Works
 
 1. **Caption Check** - First tries to fetch existing YouTube captions
-2. **Audio Fallback** - If no captions, extracts audio via RapidAPI
-3. **Whisper Transcription** - Transcribes audio using OpenAI Whisper
-4. **AI Analysis** - Claude analyzes transcript and extracts frameworks
-5. **Page Generation** - Generates a premium StoryBrand-structured landing page
+2. **Manual Fallback** - If no captions, prompts user to paste transcript manually
+3. **AI Analysis** - Claude analyzes transcript and extracts frameworks
+4. **Page Generation** - Generates a premium StoryBrand-structured landing page
 
 ## Design System
 

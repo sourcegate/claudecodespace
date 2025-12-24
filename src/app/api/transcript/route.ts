@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript";
-import { extractAudio } from "@/lib/audio-extractor";
-import { transcribeAudio, isFileSizeValid } from "@/lib/whisper";
 
 async function getVideoInfo(videoId: string) {
   const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
@@ -35,7 +33,7 @@ export async function GET(request: NextRequest) {
   // Get video info first (works for all videos)
   const videoInfo = await getVideoInfo(videoId);
 
-  // Try YouTube captions first
+  // Try YouTube captions
   try {
     const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
 
@@ -55,75 +53,16 @@ export async function GET(request: NextRequest) {
       source: "youtube-captions",
     });
   } catch (captionError) {
-    console.log("YouTube captions not available, trying Whisper transcription...");
-  }
+    console.log("YouTube captions not available for video:", videoId);
 
-  // Fallback to Whisper transcription
-  try {
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: "Transcription service not configured. Please add OPENAI_API_KEY." },
-        { status: 503 }
-      );
-    }
-
-    // Extract audio from YouTube (uses @distube/ytdl-core)
-    console.log("Extracting audio from YouTube...");
-    const audioResult = await extractAudio(videoId);
-    const audioBuffer = audioResult.audioBuffer;
-
-    // Check file size (OpenAI limit is 25MB)
-    if (!isFileSizeValid(audioBuffer)) {
-      return NextResponse.json(
-        { error: "Video audio is too large (>25MB). Please try a shorter video." },
-        { status: 413 }
-      );
-    }
-
-    // Transcribe with Whisper
-    console.log("Transcribing with Whisper...");
-    const transcription = await transcribeAudio(audioBuffer, audioResult.filename);
-
-    // Convert Whisper segments to match YouTube format
-    const segments = transcription.segments?.map((seg) => ({
-      text: seg.text,
-      offset: seg.start * 1000, // Convert to ms
-      duration: (seg.end - seg.start) * 1000,
-    })) || [];
-
-    return NextResponse.json({
-      videoId,
-      title: videoInfo.title,
-      channelTitle: videoInfo.channelTitle,
-      thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-      transcript: transcription.text,
-      segments,
-      source: "whisper",
-    });
-  } catch (error) {
-    console.error("Whisper transcription error:", error);
-
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-
-    // Check for common ytdl-core errors
-    if (errorMessage.includes("Sign in") || errorMessage.includes("age-restricted")) {
-      return NextResponse.json(
-        { error: "This video is age-restricted or requires sign-in. Please try another video." },
-        { status: 403 }
-      );
-    }
-
-    if (errorMessage.includes("private") || errorMessage.includes("unavailable")) {
-      return NextResponse.json(
-        { error: "This video is private or unavailable." },
-        { status: 404 }
-      );
-    }
-
+    // Return 404 to indicate transcript not available
+    // Frontend will show manual input option
     return NextResponse.json(
-      { error: `Failed to transcribe video: ${errorMessage}` },
-      { status: 500 }
+      {
+        error: "This video does not have captions available. Please paste the transcript manually.",
+        videoInfo,
+      },
+      { status: 404 }
     );
   }
 }

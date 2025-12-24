@@ -11,7 +11,9 @@ import {
   FileText,
   Brain,
   Palette,
-  Mic,
+  ClipboardPaste,
+  ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 import { ExtractedContent, GenerationStatus } from "@/lib/types";
 
@@ -20,11 +22,6 @@ const steps = [
     id: "fetching",
     label: "Fetching video transcript",
     icon: FileText,
-  },
-  {
-    id: "transcribing",
-    label: "Transcribing audio with AI",
-    icon: Mic,
   },
   {
     id: "extracting",
@@ -49,55 +46,17 @@ export default function GeneratePage() {
     progress: 0,
   });
   const [error, setError] = useState<string | null>(null);
+  const [needsManualTranscript, setNeedsManualTranscript] = useState(false);
+  const [manualTranscript, setManualTranscript] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [videoInfo, setVideoInfo] = useState<{
     title: string;
     channelTitle: string;
     thumbnail: string;
   } | null>(null);
 
-  const processVideo = useCallback(async () => {
+  const continueWithTranscript = useCallback(async (transcript: string, title: string, channelTitle: string) => {
     try {
-      // Step 1: Fetch transcript (may use Whisper for videos without captions)
-      setStatus({
-        step: "fetching",
-        message: "Checking for video captions...",
-        progress: 5,
-      });
-
-      // Set up a timeout to show transcribing step for long requests
-      const transcribingTimeout = setTimeout(() => {
-        setStatus({
-          step: "transcribing",
-          message: "No captions found. Transcribing audio with AI (this may take a few minutes)...",
-          progress: 15,
-        });
-      }, 5000);
-
-      const transcriptRes = await fetch(`/api/transcript?videoId=${videoId}`);
-      clearTimeout(transcribingTimeout);
-
-      if (!transcriptRes.ok) {
-        const errorData = await transcriptRes.json();
-        throw new Error(errorData.error || "Failed to fetch transcript");
-      }
-
-      const transcriptData = await transcriptRes.json();
-      setVideoInfo({
-        title: transcriptData.title,
-        channelTitle: transcriptData.channelTitle,
-        thumbnail: transcriptData.thumbnail,
-      });
-
-      const transcriptSource = transcriptData.source === "whisper"
-        ? "Audio transcribed with AI!"
-        : "Transcript fetched successfully!";
-
-      setStatus({
-        step: "fetching",
-        message: transcriptSource,
-        progress: 30,
-      });
-
       // Step 2: Extract content with AI
       setStatus({
         step: "extracting",
@@ -110,9 +69,9 @@ export default function GeneratePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           videoId,
-          title: transcriptData.title,
-          channelTitle: transcriptData.channelTitle,
-          transcript: transcriptData.transcript,
+          title,
+          channelTitle,
+          transcript,
         }),
       });
 
@@ -157,11 +116,211 @@ export default function GeneratePage() {
     }
   }, [videoId, router]);
 
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualTranscript.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setNeedsManualTranscript(false);
+
+    const title = videoInfo?.title || "Video Transcript";
+    const channelTitle = videoInfo?.channelTitle || "Speaker";
+
+    await continueWithTranscript(manualTranscript.trim(), title, channelTitle);
+    setIsSubmitting(false);
+  };
+
+  const processVideo = useCallback(async () => {
+    try {
+      // Step 1: Fetch transcript
+      setStatus({
+        step: "fetching",
+        message: "Checking for video captions...",
+        progress: 5,
+      });
+
+      const transcriptRes = await fetch(`/api/transcript?videoId=${videoId}`);
+
+      if (!transcriptRes.ok) {
+        const errorData = await transcriptRes.json();
+
+        // If transcript not available, show manual input
+        if (transcriptRes.status === 404 || transcriptRes.status === 503 || transcriptRes.status === 502) {
+          // Try to get video info for display
+          try {
+            const oembedRes = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+            if (oembedRes.ok) {
+              const oembedData = await oembedRes.json();
+              setVideoInfo({
+                title: oembedData.title || "Unknown Title",
+                channelTitle: oembedData.author_name || "Unknown Speaker",
+                thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+              });
+            }
+          } catch {
+            // Ignore oembed errors
+          }
+
+          setNeedsManualTranscript(true);
+          return;
+        }
+
+        throw new Error(errorData.error || "Failed to fetch transcript");
+      }
+
+      const transcriptData = await transcriptRes.json();
+      setVideoInfo({
+        title: transcriptData.title,
+        channelTitle: transcriptData.channelTitle,
+        thumbnail: transcriptData.thumbnail,
+      });
+
+      setStatus({
+        step: "fetching",
+        message: "Transcript fetched successfully!",
+        progress: 30,
+      });
+
+      await continueWithTranscript(
+        transcriptData.transcript,
+        transcriptData.title,
+        transcriptData.channelTitle
+      );
+    } catch (err) {
+      console.error("Processing error:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+      setStatus({
+        step: "error",
+        message: "Something went wrong",
+        progress: 0,
+      });
+    }
+  }, [videoId, continueWithTranscript]);
+
   useEffect(() => {
     processVideo();
   }, [processVideo]);
 
   const currentStepIndex = steps.findIndex((s) => s.id === status.step);
+
+  // Manual transcript input view
+  if (needsManualTranscript) {
+    return (
+      <main className="min-h-screen bg-[var(--cream)] flex items-center justify-center px-6 py-12">
+        <div className="max-w-2xl w-full">
+          {/* Video Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8"
+          >
+            <div className="aspect-video relative bg-[var(--navy)]">
+              <img
+                src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                alt="Video thumbnail"
+                className="w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--navy)] to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4">
+                {videoInfo ? (
+                  <>
+                    <p className="text-white/70 text-sm font-sans mb-1">
+                      {videoInfo.channelTitle}
+                    </p>
+                    <h2 className="text-white font-sans font-semibold text-lg line-clamp-2">
+                      {videoInfo.title}
+                    </h2>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="h-4 bg-white/20 rounded w-24 animate-pulse" />
+                    <div className="h-6 bg-white/20 rounded w-64 animate-pulse" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Manual Transcript Input */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl shadow-sm p-8"
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-[var(--gold)]/10 flex items-center justify-center mx-auto mb-4">
+                <ClipboardPaste className="w-8 h-8 text-[var(--gold)]" />
+              </div>
+              <h3 className="text-xl font-sans font-semibold text-[var(--navy)] mb-2">
+                Paste Your Transcript
+              </h3>
+              <p className="text-[var(--slate)] text-sm">
+                This video does not have captions available. You can paste the transcript manually to continue.
+              </p>
+            </div>
+
+            {/* How to get transcript */}
+            <div className="bg-[var(--stone)] rounded-xl p-4 mb-6">
+              <p className="text-sm font-semibold text-[var(--navy)] mb-2">How to get the transcript:</p>
+              <ol className="text-sm text-[var(--slate)] space-y-1 list-decimal list-inside">
+                <li>Open the video on YouTube</li>
+                <li>Click the three dots (...) below the video</li>
+                <li>Select &quot;Show transcript&quot;</li>
+                <li>Copy all the text and paste it below</li>
+              </ol>
+              <a
+                href={`https://www.youtube.com/watch?v=${videoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-[var(--gold)] hover:underline mt-3"
+              >
+                Open video on YouTube
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <form onSubmit={handleManualSubmit}>
+              <textarea
+                value={manualTranscript}
+                onChange={(e) => setManualTranscript(e.target.value)}
+                placeholder="Paste the video transcript here..."
+                className="w-full h-48 p-4 rounded-xl border-2 border-[var(--stone)] bg-white text-[var(--navy)] placeholder:text-[var(--slate)]/50 focus:outline-none focus:border-[var(--gold)] transition-colors font-sans text-sm resize-none"
+                disabled={isSubmitting}
+              />
+
+              <div className="flex gap-4 mt-4">
+                <button
+                  type="button"
+                  onClick={() => router.push("/")}
+                  className="flex-1 px-6 py-3 rounded-xl font-sans font-semibold border-2 border-[var(--stone)] text-[var(--slate)] hover:bg-[var(--stone)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!manualTranscript.trim() || isSubmitting}
+                  className="flex-1 btn-gold px-6 py-3 rounded-xl font-sans font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 spinner" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Continue
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[var(--cream)] flex items-center justify-center px-6">
