@@ -21,9 +21,9 @@ const GenerateForm = dynamic(() => import("@/components/generate-form").then(mod
 
 export default function Home() {
   const features = [
-    "Extract your unique framework and IP",
-    "Generate a premium landing page",
-    "Download ready-to-deploy code",
+    "Works with any content",
+    "Premium landing page in minutes",
+    "Download and deploy anywhere",
   ];
 
   return (
@@ -53,7 +53,7 @@ export default function Home() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--stone)] text-[var(--slate)] text-sm font-sans mb-8">
               <Sparkles className="w-4 h-4 text-[var(--gold)]" />
-              Transform any YouTube talk into a platform
+              Videos, meetings, podcasts & more
             </span>
           </motion.div>
 
@@ -63,7 +63,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-5xl md:text-6xl lg:text-7xl font-sans font-bold text-[var(--navy)] leading-tight mb-6"
           >
-            Your Talk Deserves
+            Your Ideas Deserve
             <br />
             <span className="gradient-text">a Platform</span>
           </motion.h1>
@@ -74,8 +74,8 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl text-[var(--slate)] max-w-2xl mx-auto mb-12"
           >
-            Paste any YouTube URL and watch your ideas transform into a
-            polished landing page in minutes.
+            Paste a YouTube video or any transcript. Watch your ideas
+            transform into a stunning landing page in minutes.
           </motion.p>
 
           {/* URL Input Form */}

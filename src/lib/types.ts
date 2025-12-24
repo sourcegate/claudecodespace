@@ -124,7 +124,7 @@ export interface ExtractedContent {
 }
 
 export interface GenerationStatus {
-  step: "fetching" | "transcribing" | "extracting" | "generating" | "complete" | "error";
+  step: "fetching" | "processing" | "transcribing" | "extracting" | "generating" | "complete" | "error";
   message: string;
   progress: number;
 }
