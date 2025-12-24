@@ -1,12 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildExtractionPrompt } from "@/lib/prompt";
 import { ExtractedContent } from "@/lib/types";
+import { canGenerate, incrementUsage, getLimit } from "@/lib/usage";
 
 const anthropic = new Anthropic();
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Please sign in to generate landing pages" },
+        { status: 401 }
+      );
+    }
+
+    // Check usage limits
+    const usage = await canGenerate(userId);
+    if (!usage.allowed) {
+      return NextResponse.json(
+        {
+          error: `You've used all ${getLimit()} free generations. Contact us to upgrade.`,
+          usageExceeded: true
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { videoId, title, channelTitle, transcript } = body;
 
@@ -60,6 +83,9 @@ export async function POST(request: NextRequest) {
       console.error("Raw response:", textContent.text);
       throw new Error("Failed to parse AI response as JSON");
     }
+
+    // Increment usage count after successful generation
+    await incrementUsage(userId);
 
     return NextResponse.json({
       success: true,

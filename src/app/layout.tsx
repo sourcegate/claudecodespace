@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,11 +18,29 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
+  const content = (
     <html lang="en">
-      <body className="antialiased">
-        {children}
+      <body className="antialiased flex flex-col min-h-screen">
+        <div className="flex-1">{children}</div>
+        <footer className="py-6 text-center text-sm text-[var(--slate)] bg-[var(--cream)]">
+          Built by{" "}
+          <a
+            href="https://thoughtowner.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[var(--navy)] hover:text-[var(--gold)] transition-colors"
+          >
+            Thought Owner
+          </a>
+        </footer>
       </body>
     </html>
   );
+
+  // Skip ClerkProvider if keys not configured (for local dev without Clerk)
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return content;
+  }
+
+  return <ClerkProvider>{content}</ClerkProvider>;
 }

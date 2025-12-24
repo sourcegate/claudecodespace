@@ -11,6 +11,7 @@ import {
   FileText,
   Brain,
   Palette,
+  Mic,
 } from "lucide-react";
 import { ExtractedContent, GenerationStatus } from "@/lib/types";
 
@@ -19,6 +20,11 @@ const steps = [
     id: "fetching",
     label: "Fetching video transcript",
     icon: FileText,
+  },
+  {
+    id: "transcribing",
+    label: "Transcribing audio with AI",
+    icon: Mic,
   },
   {
     id: "extracting",
@@ -51,14 +57,25 @@ export default function GeneratePage() {
 
   const processVideo = useCallback(async () => {
     try {
-      // Step 1: Fetch transcript
+      // Step 1: Fetch transcript (may use Whisper for videos without captions)
       setStatus({
         step: "fetching",
-        message: "Fetching video transcript from YouTube...",
-        progress: 10,
+        message: "Checking for video captions...",
+        progress: 5,
       });
 
+      // Set up a timeout to show transcribing step for long requests
+      const transcribingTimeout = setTimeout(() => {
+        setStatus({
+          step: "transcribing",
+          message: "No captions found. Transcribing audio with AI (this may take a few minutes)...",
+          progress: 15,
+        });
+      }, 5000);
+
       const transcriptRes = await fetch(`/api/transcript?videoId=${videoId}`);
+      clearTimeout(transcribingTimeout);
+
       if (!transcriptRes.ok) {
         const errorData = await transcriptRes.json();
         throw new Error(errorData.error || "Failed to fetch transcript");
@@ -71,9 +88,13 @@ export default function GeneratePage() {
         thumbnail: transcriptData.thumbnail,
       });
 
+      const transcriptSource = transcriptData.source === "whisper"
+        ? "Audio transcribed with AI!"
+        : "Transcript fetched successfully!";
+
       setStatus({
         step: "fetching",
-        message: "Transcript fetched successfully!",
+        message: transcriptSource,
         progress: 30,
       });
 

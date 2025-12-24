@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Play, Sparkles, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+
+// Dynamic import to avoid SSR issues with Clerk
+const AuthNav = dynamic(() => import("@/components/auth-nav").then(mod => mod.AuthNav), {
+  ssr: false,
+  loading: () => <div className="w-8 h-8 rounded-full bg-[var(--stone)] animate-pulse" />,
+});
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -57,6 +64,9 @@ export default function Home() {
               <Sparkles className="w-4 h-4 text-[var(--gold)]" />
             </div>
             <span className="font-sans font-semibold text-[var(--navy)]">Talk to Landing</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <AuthNav />
           </div>
         </div>
       </nav>
@@ -306,20 +316,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 bg-[var(--navy)] border-t border-white/10">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-[var(--gold)]" />
-            </div>
-            <span className="font-sans text-sm text-white/70">Talk to Landing</span>
-          </div>
-          <p className="text-white/50 text-sm font-sans">
-            &copy; {new Date().getFullYear()} All rights reserved.
-          </p>
-        </div>
-      </footer>
     </main>
   );
 }
