@@ -95,8 +95,13 @@ export async function POST(request: NextRequest) {
       throw new Error("Failed to parse AI response as JSON");
     }
 
-    // Increment usage count after successful generation
-    await incrementUsage(userId);
+    // Increment usage count and store generation record
+    await incrementUsage(userId, {
+      id: videoId,
+      title: title || "Untitled",
+      speaker: channelTitle || "Unknown",
+      source: transcriptSource || "youtube-captions",
+    });
 
     // Log generation to Google Sheets (non-blocking)
     logGeneration({
