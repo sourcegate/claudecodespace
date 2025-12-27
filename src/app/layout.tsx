@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const BASE_URL = "https://talktolanding.theresonance.studio";
@@ -95,6 +96,7 @@ export default function RootLayout({
             Thought Owner
           </a>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
